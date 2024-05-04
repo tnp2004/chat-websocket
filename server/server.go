@@ -1,6 +1,7 @@
 package server
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/tnp2004/chat-websocket/config"
@@ -23,10 +24,13 @@ func NewServer(conf *config.Server, handle handle.IWebsocketHandle) IServer {
 }
 
 func (s *server) Listening() error {
-	http.Handle("/ws", websocket.Handler(s.handle.IncomingHandle))
+	http.Handle("/ws", websocket.Handler(s.handle.IncomingHandler))
+	http.Handle("/rooms", websocket.Handler(s.handle.RoomHandler))
+	http.Handle("/rooms/create", websocket.Handler(s.handle.CreateRoomHandler))
 
-	if err := http.ListenAndServe(":3000", nil); err != nil {
-		return &exception.ListeningFailed{Addr: "ws://localhost:3000"}
+	if err := http.ListenAndServe(fmt.Sprintf(":%d", s.conf.Port), nil); err != nil {
+		Addr := fmt.Sprintf("ws://%s:%d", s.conf.Host, s.conf.Port)
+		return &exception.ListeningFailed{Addr: Addr}
 	}
 
 	return nil
