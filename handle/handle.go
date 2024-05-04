@@ -4,10 +4,12 @@ import (
 	"fmt"
 	"io"
 
+	"github.com/tnp2004/chat-websocket/config"
 	"golang.org/x/net/websocket"
 )
 
 type websocketHandle struct {
+	conf  *config.Config
 	conns map[*websocket.Conn]bool
 }
 
@@ -15,8 +17,8 @@ type IWebsocketHandle interface {
 	IncomingHandle(ws *websocket.Conn)
 }
 
-func NewWebsocketHandle() IWebsocketHandle {
-	return &websocketHandle{conns: make(map[*websocket.Conn]bool)}
+func NewWebsocketHandle(conf *config.Config) IWebsocketHandle {
+	return &websocketHandle{conf: conf, conns: make(map[*websocket.Conn]bool)}
 }
 
 func (h *websocketHandle) IncomingHandle(ws *websocket.Conn) {

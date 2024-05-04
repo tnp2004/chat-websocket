@@ -3,12 +3,14 @@ package server
 import (
 	"net/http"
 
+	"github.com/tnp2004/chat-websocket/config"
 	"github.com/tnp2004/chat-websocket/exception"
 	"github.com/tnp2004/chat-websocket/handle"
 	"golang.org/x/net/websocket"
 )
 
 type server struct {
+	conf   *config.Server
 	handle handle.IWebsocketHandle
 }
 
@@ -16,8 +18,8 @@ type IServer interface {
 	Listening() error
 }
 
-func NewServer(handle handle.IWebsocketHandle) IServer {
-	return &server{handle}
+func NewServer(conf *config.Server, handle handle.IWebsocketHandle) IServer {
+	return &server{conf, handle}
 }
 
 func (s *server) Listening() error {
