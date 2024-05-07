@@ -36,14 +36,14 @@ func (h *websocketHandle) IncomingHandler(ws *websocket.Conn) {
 func (h *websocketHandle) RoomHandler(ws *websocket.Conn) {
 	roomID := ws.Request().URL.Query().Get("id")
 	username := ws.Request().URL.Query().Get("name")
-	fmt.Printf("Room %s: %s has joined ", roomID, username)
+	fmt.Printf("Room %s: %s has joined\n", roomID, username)
 
 	if err := h.joinRoom(roomID, ws); err != nil {
 		log.Println(err.Error())
 		return
 	}
 
-	msg := fmt.Sprintf("%s has joined", username)
+	msg := fmt.Sprintf("%s has joined\n", username)
 	h.broadcast(roomID, []byte(msg))
 
 	h.read(roomID, ws)
@@ -86,6 +86,10 @@ func (h *websocketHandle) broadcast(roomID string, b []byte) {
 
 func (h *websocketHandle) joinRoom(roomID string, ws *websocket.Conn) error {
 	if _, ok := h.rooms[roomID]; !ok {
+		msg := fmt.Sprintf("Room %s doesn't exists", roomID)
+		if _, err := ws.Write([]byte(msg)); err != nil {
+			log.Printf("Broadcast error: %s", err.Error())
+		}
 		return &exception.RoomDoesNotExists{RoomID: roomID}
 	}
 
