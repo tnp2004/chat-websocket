@@ -34,13 +34,17 @@ func (h *websocketHandle) IncomingHandler(ws *websocket.Conn) {
 }
 
 func (h *websocketHandle) RoomHandler(ws *websocket.Conn) {
-	fmt.Println("New user from: ", ws.RemoteAddr())
 	roomID := ws.Request().URL.Query().Get("id")
+	username := ws.Request().URL.Query().Get("name")
+	fmt.Printf("Room %s: %s has joined ", roomID, username)
 
 	if err := h.joinRoom(roomID, ws); err != nil {
 		log.Println(err.Error())
 		return
 	}
+
+	msg := fmt.Sprintf("%s has joined", username)
+	h.broadcast(roomID, []byte(msg))
 
 	h.read(roomID, ws)
 }
