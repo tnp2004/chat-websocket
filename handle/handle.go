@@ -94,6 +94,8 @@ func (h *websocketHandle) joinRoom(roomID string, ws *websocket.Conn) error {
 	}
 
 	h.rooms[roomID].conns[ws] = true
+	msg := fmt.Sprintf("Welcome to room %s", roomID)
+	ws.Write([]byte(msg))
 
 	return nil
 }
