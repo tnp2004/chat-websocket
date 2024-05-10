@@ -5,6 +5,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chat</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Ubuntu+Sans:ital,wght@0,100..800;1,100..800&display=swap"
+        rel="stylesheet">
     <script src="https://unpkg.com/htmx.org@1.9.12"></script>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
@@ -14,25 +18,137 @@
         <a href="#" class="font-bold">Chat</a>
     </nav>
 
-    <div class="mt-12 p-2 flex flex-col items-center justify-center gap-3">
-        <div class="w-1/4 border-2 border-slate-700 bg-slate-300 flex p-1 rounded">
-            <label class="w-1/4 font-bold" for="username">Username</label>
-            <input class="w-full px-1" type="text">
+    <div class="mt-12 p-2 flex flex-col w-fit gap-3 mx-auto">
+        <div class="border-2 border-slate-700 bg-slate-300 flex p-1 rounded gap-1">
+            <label class="font-bold" for="username">Username</label>
+            <input id="username" class="w-full px-1" type="text">
         </div>
 
-        <div class="p-1 flex flex-wrap justify-center w-1/2 gap-2">
-
-            <div class=" w-1/4 px-2 py-1 rounded border-2 border-slate-700 bg-slate-300 drop-shadow-xl">
-                <label class="font-bold block" for="room-id">Room 123</label>
-                <div class="flex justify-between">
-                    <label class="" for="total-person">2 peoples</label>
-                    <button class="bg-emerald-500 px-1 rounded-sm">join</button>
-                </div>
+        <div class="w-1/4 flex gap-1">
+            <div class="border-2 border-slate-700 bg-slate-300 flex p-1 rounded gap-1">
+                <label class="font-bold" for="roomid">RoomID</label>
+                <input id="roomID" class="px-1" type="text">
             </div>
+            <button id="joinBtn"
+                class="border-2 bg-emerald-500 border-emerald-600 rounded px-2 font-bold opacity-90 hover:opacity-100">Join</button>
+            <button id="createBtn"
+                class="border-2 bg-sky-500 border-sky-600 rounded px-2 font-bold opacity-90 hover:opacity-100">Create</button>
+        </div>
 
+
+    </div>
+
+    <div id="chatBox" class="w-1/2 mx-auto border-2 border-slate-700 rounded hidden">
+        <label class="bg-slate-500 px-1 w-full block font-bold" for="title">Chat Room</label>
+
+        <ul id="chatMessage" class="min-h-72 p-1">
+        </ul>
+
+        <div class="flex gap-1 p-1 bg-slate-300">
+            <input id="message" placeholder="message..." class="w-full px-1" type="text">
+            <button class="font-bold hover:text-sky-500" id="sendBtn">send</button>
         </div>
 
     </div>
+
 </body>
 
 </html>
+
+<script>
+    const config = {
+        host: "localhost",
+        port: 3000,
+    }
+
+    const getData = () => {
+        if (username.value == "" || roomID.value == "") {
+            console.log("all fields is require")
+            return
+        }
+
+        const data = {
+            username: username.value,
+            roomID: roomID.value
+        }
+
+        return data
+    }
+
+    const CreateRoom = () => {
+        if (roomID.value == "") {
+            console.log("RoomID is require")
+            return
+        }
+
+        const socket = new WebSocket(`ws://${config.host}:${config.port}/rooms/create?id=${roomID.value}`)
+        socket.onmessage = (e) => { console.log(e.data) }
+    }
+
+    let socket
+    const JoinRoom = () => {
+        const data = getData()
+
+        socket = new WebSocket(`ws://${config.host}:${config.port}/rooms?id=${data.roomID}&name=${data.username}`)
+        socket.onmessage = (e) => {
+            console.log(e.data)
+            addMessageElement(e.data)
+        }
+
+        chatBox.classList.remove("hidden")
+    }
+
+    const addMessageElement = (msg) => {
+        let li = document.createElement("li")
+
+        const trimMsg = msg.split(":")
+
+        if (trimMsg.length != 2) {
+            li.classList.add("text-center", "text-slate-400")
+            li.innerHTML = msg
+        } else if (trimMsg[0] == username.value) {
+            li.classList.add("text-end")
+            li.innerHTML = trimMsg[1]
+        } else {
+            let label = document.createElement("label")
+            label.innerHTML = msg
+            li.appendChild(label)
+        }
+
+        chatMessage.appendChild(li)
+    }
+
+    const SendMessage = () => {
+        if (message.value == "") {
+            console.log("message is empty")
+            return
+        }
+
+        if (socket == null) {
+            console.log("room not found")
+            return
+        }
+
+        socket.send(`${username.value}: ${message.value}`)
+
+        message.value = ""
+    }
+
+
+    joinBtn.addEventListener("click", JoinRoom)
+    createBtn.addEventListener("click", CreateRoom)
+    sendBtn.addEventListener("click", SendMessage)
+    document.addEventListener("keypress", (e) => {
+        if (e.key === "Enter") {
+            e.preventDefault()
+
+            SendMessage()
+        }
+    })
+</script>
+
+<style>
+    * {
+        font-family: "Ubuntu Sans";
+    }
+</style>
