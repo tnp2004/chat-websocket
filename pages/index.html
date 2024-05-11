@@ -39,7 +39,10 @@
     </div>
 
     <div id="chatBox" class="w-1/2 mx-auto border-2 border-slate-700 rounded hidden">
-        <label class="bg-slate-500 px-1 w-full block font-bold" for="title">Chat Room</label>
+        <div class="flex justify-between">
+            <label class="bg-slate-500 px-1 w-full block font-bold" for="title">Chat Room</label>
+            <button id="leaveBtn" class="border-2 bg-rose-500 border-rose-600 px-1 font-bold">Leave</button>
+        </div>
 
         <ul id="chatMessage" class="min-h-72 p-1">
         </ul>
@@ -88,7 +91,7 @@
     let socket
     const JoinRoom = () => {
         const data = getData()
-
+        
         socket = new WebSocket(`ws://${config.host}:${config.port}/rooms?id=${data.roomID}&name=${data.username}`)
         socket.onmessage = (e) => {
             console.log(e.data)
@@ -134,10 +137,17 @@
         message.value = ""
     }
 
+    const LeaveRoom = () => {
+        socket.close()
+        chatMessage.innerHTML = ""
+        chatBox.classList.add("hidden")
+    }
+
 
     joinBtn.addEventListener("click", JoinRoom)
     createBtn.addEventListener("click", CreateRoom)
     sendBtn.addEventListener("click", SendMessage)
+    leaveBtn.addEventListener("click", LeaveRoom)
     document.addEventListener("keypress", (e) => {
         if (e.key === "Enter") {
             e.preventDefault()
